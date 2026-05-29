@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Conversation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Start New Conversation</h2>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            Conversation Title
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.title.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            ✨ Create Conversation
+                        </button>
+                    </div>
+
+                    <a href="/chat/" class="btn btn-outline-secondary w-100">
+                        Back to Conversations
+                    </a>
+                </form>
+
+                <hr class="my-4">
+
+                <h5>Conversation Tips:</h5>
+                <ul>
+                    <li>Give your conversation a descriptive title</li>
+                    <li>Each conversation maintains its own message history</li>
+                    <li>The AI learns from your previous messages in this chat</li>
+                    <li>You can delete conversations anytime</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

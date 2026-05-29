@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}My Conversations{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Navigation</h5>
+                <div class="d-grid gap-2">
+                    <a href="/chat/new/" class="btn btn-primary">
+                        ➕ New Conversation
+                    </a>
+                    <a href="/chat/demo/" class="btn btn-outline-secondary">
+                        🤖 Try Demo
+                    </a>
+                </div>
+
+                <hr>
+
+                <div class="llm-info">
+                    <small>
+                        <strong>Provider:</strong> {{ llm_info.provider|upper }}<br>
+                        <strong>Model:</strong> {{ llm_info.model }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title mb-4">My Conversations</h2>
+
+                {% if conversations %}
+                    <div class="row">
+                        {% for conversation in conversations %}
+                            <div class="col-md-6 mb-3">
+                                <div class="conversation-item">
+                                    <a href="{% url 'chat_conversation' conversation.id %}" class="text-decoration-none text-dark">
+                                        <h6 class="mb-2">{{ conversation.title }}</h6>
+                                        <small class="text-muted">
+                                            Messages: {{ conversation.messages.count }}<br>
+                                            Updated: {{ conversation.updated_at|date:"M d, Y H:i" }}
+                                        </small>
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <h5>No conversations yet!</h5>
+                        <p>Start a new conversation to begin chatting with AI.</p>
+                        <a href="/chat/new/" class="btn btn-primary">Create First Conversation</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

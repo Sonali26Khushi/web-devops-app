@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}AI Chat Demo - Try it Out!{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title mb-4">🚀 AI Chat Demo</h1>
+
+                <div class="llm-info">
+                    <strong>Provider:</strong> {{ llm_info.provider|upper }} | 
+                    <strong>Model:</strong> {{ llm_info.model }}
+                </div>
+
+                {% if not user.is_authenticated %}
+                    <div class="alert alert-info demo-warning mt-3">
+                        <strong>Demo Mode:</strong> You're using the public demo. 
+                        <a href="/admin/login/">Login</a> to save conversations.
+                    </div>
+                {% endif %}
+
+                {% if ai_response %}
+                    <div class="mt-4">
+                        <h5>Your Question:</h5>
+                        <div class="message-user">
+                            {{ user_message }}
+                        </div>
+
+                        <h5 class="mt-4">AI Response:</h5>
+                        {% if error %}
+                            <div class="alert alert-danger">
+                                {{ ai_response }}
+                            </div>
+                        {% else %}
+                            <div class="message-assistant">
+                                {{ ai_response|linebreaks }}
+                            </div>
+                            <small class="text-muted">
+                                Tokens used: {{ tokens_used }} | Provider: {{ provider|upper }}
+                            </small>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="message-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Ask me anything:</label>
+                        <textarea 
+                            class="form-control" 
+                            id="message" 
+                            name="message" 
+                            rows="4" 
+                            placeholder="Type your question here..."
+                            required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        Send Message 📤
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <h5>Want to save conversations?</h5>
+                <p>
+                    <a href="/admin/login/" class="btn btn-outline-primary">Login to Your Account</a>
+                </p>
+
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h6>💡 Example Questions:</h6>
+                    <ul class="mb-0">
+                        <li>What is machine learning?</li>
+                        <li>How does Django work?</li>
+                        <li>Explain Python decorators</li>
+                        <li>Write a Python function to reverse a string</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
