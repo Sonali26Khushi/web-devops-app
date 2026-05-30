@@ -52,8 +52,19 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-default_db = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
-database_url = os.getenv("DATABASE_URL", default_db)
+database_url = os.getenv("DATABASE_URL")
+
+if not database_url:
+    postgres_user = os.getenv("POSTGRES_USER", "postgres")
+    postgres_password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    postgres_host = os.getenv("POSTGRES_HOST", "localhost")
+    postgres_port = os.getenv("POSTGRES_PORT", "5432")
+    postgres_db = os.getenv("POSTGRES_DB", "webdevops")
+    database_url = (
+        f"postgresql://{postgres_user}:{postgres_password}@"
+        f"{postgres_host}:{postgres_port}/{postgres_db}"
+    )
+
 DATABASES = {
     "default": dj_database_url.parse(database_url, conn_max_age=600)
 }

@@ -6,7 +6,7 @@ Django web application that combines:
 - AI chat (conversation history + demo/widget endpoints)
 - Smart search over stored records with optional LLM summaries
 
-The project is built with Django templates, SQLite by default, optional Redis cache, and optional Ollama/OpenAI LLM integration.
+The project is built with Django templates, PostgreSQL by default, optional Redis cache, and optional Ollama/OpenAI LLM integration.
 
 ## Features
 
@@ -21,7 +21,7 @@ The project is built with Django templates, SQLite by default, optional Redis ca
 
 - Python 3.9+
 - Django 4.2
-- SQLite (default), PostgreSQL via `DATABASE_URL`
+- PostgreSQL (default), configurable via `DATABASE_URL`
 - Redis (optional hit counter/cache dependency)
 - Ollama (default LLM provider) or OpenAI (if `OPENAI_API_KEY` is set)
 
@@ -105,8 +105,13 @@ DJANGO_SECRET_KEY=change-me
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
 
-# Optional: PostgreSQL or other DB supported by dj-database-url
-DATABASE_URL=sqlite:///db.sqlite3
+# PostgreSQL (default)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/webdevops
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=webdevops
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 
 # Optional Redis
 REDIS_HOST=localhost
@@ -124,6 +129,26 @@ Notes:
 
 - If `OPENAI_API_KEY` is empty, the app uses Ollama.
 - The app can run without Redis; it falls back to local in-memory hit counting.
+
+## Docker (App + PostgreSQL)
+
+Start both services:
+
+```bash
+docker compose up --build
+```
+
+Open the app:
+
+- Home: http://127.0.0.1:8000/
+- Admin: http://127.0.0.1:8000/admin/
+- Health: http://127.0.0.1:8000/api/health
+
+Stop services:
+
+```bash
+docker compose down
+```
 
 ## Main Routes
 

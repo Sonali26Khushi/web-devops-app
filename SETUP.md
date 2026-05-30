@@ -7,7 +7,7 @@ A modern Django web application with integrated LLM (Large Language Model) suppo
 - **AI Chat Interface**: Interactive chat with AI using Ollama or OpenAI
 - **Conversation History**: Save and organize conversations
 - **User Authentication**: Secure login system with Django admin
-- **Database Integration**: SQLite by default, PostgreSQL for production
+- **Database Integration**: PostgreSQL by default
 - **Multi-LLM Support**: 
   - Ollama (local, free, open-source)
   - OpenAI (cloud-based)
@@ -51,6 +51,14 @@ DJANGO_SECRET_KEY=your-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=127.0.0.1,localhost
 
+# PostgreSQL
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/webdevops
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=webdevops
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+
 # For Ollama (local LLM)
 OLLAMA_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2:1b
@@ -66,6 +74,18 @@ python manage.py runserver
 ```
 
 Visit: **http://127.0.0.1:8000/**
+
+### Run with Docker Compose (App + PostgreSQL)
+
+```bash
+docker compose up --build
+```
+
+Stop services:
+
+```bash
+docker compose down
+```
 
 ## 📖 Usage
 
