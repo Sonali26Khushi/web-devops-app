@@ -1,0 +1,69 @@
+services:
+  web-app:
+    build: .
+    container_name: webapp
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/webdevops
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: webdevops
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: tinyllama:latest
+      REDIS_HOST: webapp-redis
+      REDIS_PORT: "6379"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - webapp-net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: webapp-ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - webapp-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: webapp-postgres
+    environment:
+      POSTGRES_DB: webdevops
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - webapp-volume:/var/lib/postgresql/data
+    networks:
+      - webapp-net
+
+  redis:
+    image: redis:latest
+    container_name: webapp-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - webapp-net
+
+networks:
+  webapp-net:
+    driver: bridge
+
+volumes:
+  webapp-volume:
