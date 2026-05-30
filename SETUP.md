@@ -75,16 +75,17 @@ python manage.py runserver
 
 Visit: **http://127.0.0.1:8000/**
 
-### Run with Docker Compose (App + PostgreSQL)
+### Run with Docker
 
 ```bash
-docker compose up --build
+docker build -t web-devops-app .
+docker run --rm --env-file .env -p 8000:8080 web-devops-app
 ```
 
-Stop services:
+Stop the container:
 
 ```bash
-docker compose down
+Ctrl+C
 ```
 
 ## 📖 Usage

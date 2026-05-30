@@ -130,12 +130,18 @@ Notes:
 - If `OPENAI_API_KEY` is empty, the app uses Ollama.
 - The app can run without Redis; it falls back to local in-memory hit counting.
 
-## Docker (App + PostgreSQL)
+## Docker (App Container)
 
-Start both services:
+Build the image:
 
 ```bash
-docker compose up --build
+docker build -t web-devops-app .
+```
+
+Run the container:
+
+```bash
+docker run --rm --env-file .env -p 8000:8080 web-devops-app
 ```
 
 Open the app:
@@ -144,10 +150,10 @@ Open the app:
 - Admin: http://127.0.0.1:8000/admin/
 - Health: http://127.0.0.1:8000/api/health
 
-Stop services:
+Stop the container:
 
 ```bash
-docker compose down
+Ctrl+C
 ```
 
 ## Main Routes
