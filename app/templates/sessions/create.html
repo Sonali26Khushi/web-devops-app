@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}New Session — DevPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+.create-outer { max-width: 540px; margin: 0 auto; }
+.create-back { display: inline-flex; align-items: center; gap: 6px; color: #64748b; text-decoration: none; font-size: 0.88rem; margin-bottom: 20px; font-weight: 500; }
+.create-back:hover { color: #059669; }
+.form-title { font-size: 1.3rem; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+.form-sub { color: #64748b; font-size: 0.9rem; margin-bottom: 28px; }
+.field-label { font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; display: block; }
+.hint { font-size: 0.82rem; color: #64748b; margin-top: 6px; margin-bottom: 16px; }
+.idea-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.idea-chip { border: 1px solid #e2e8f0; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; color: #475569; cursor: pointer; background: #fff; transition: all 0.15s; }
+.idea-chip:hover { border-color: #059669; color: #059669; background: #ecfdf5; }
+.form-actions { display: flex; gap: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-outer">
+    <a href="{% url 'sessions_home' %}" class="create-back"><i class="bi bi-arrow-left"></i> Back to sessions</a>
+
+    <div class="form-title">Start a Focus Session</div>
+    <div class="form-sub">A focused AI workspace for one task, bug, or engineering problem.</div>
+
+    <div class="dp-card">
+        <form method="post">
+            {% csrf_token %}
+
+            <label class="field-label">Session name</label>
+            {{ form.title }}
+            <div class="hint">Be specific — e.g. "Debug API rate limit" or "Design auth service"</div>
+
+            <div class="field-label">Quick ideas</div>
+            <div class="idea-chips">
+                <button type="button" class="idea-chip" onclick="setTitle('Debug failing unit tests')">Bug fix</button>
+                <button type="button" class="idea-chip" onclick="setTitle('Design microservice architecture')">Architecture</button>
+                <button type="button" class="idea-chip" onclick="setTitle('Optimize database queries')">Optimization</button>
+                <button type="button" class="idea-chip" onclick="setTitle('Code review and refactor')">Code review</button>
+                <button type="button" class="idea-chip" onclick="setTitle('Implement new feature')">Feature work</button>
+                <button type="button" class="idea-chip" onclick="setTitle('Security audit and fixes')">Security</button>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-emerald"><i class="bi bi-lightning-fill me-1"></i> Start Session</button>
+                <a href="{% url 'sessions_home' %}" class="btn-ghost" style="text-decoration:none;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function setTitle(t) {
+    const f = document.querySelector('#id_title') || document.querySelector('[name="title"]');
+    if (f) { f.value = t; f.focus(); }
+}
+</script>
+{% endblock %}

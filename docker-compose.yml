@@ -26,6 +26,9 @@ services:
     container_name: webapp-ollama
     ports:
       - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull tinyllama:latest && wait"]
     networks:
       - webapp-net
 
@@ -67,3 +70,4 @@ networks:
 
 volumes:
   webapp-volume:
+  ollama-data:

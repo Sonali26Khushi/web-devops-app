@@ -2,112 +2,134 @@
 
 {% block title %}{{ conversation.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .room-shell {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 16px;
+    }
+
+    .room-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .room-list a {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid #dbe2ec;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 8px;
+        background: #f8fafc;
+    }
+
+    .room-list a.active {
+        border-color: #0f766e;
+        background: #ecfeff;
+    }
+
+    .msg-wrap {
+        max-height: 520px;
+        overflow-y: auto;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    .msg {
+        max-width: 82%;
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+    }
+
+    .msg-user {
+        margin-left: auto;
+        background: #0f766e;
+        color: #ffffff;
+    }
+
+    .msg-ai {
+        margin-right: auto;
+        background: #ffffff;
+        border: 1px solid #dbe2ec;
+        color: #1e293b;
+    }
+
+    @media (max-width: 992px) {
+        .room-shell {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Conversations</h5>
-                <div class="list-group list-group-flush">
-                    {% for conv in all_conversations %}
-                        <a href="{% url 'chat_conversation' conv.id %}" 
-                           class="list-group-item list-group-item-action {% if conv.id == conversation.id %}active{% endif %}">
-                            {{ conv.title }}
-                        </a>
-                    {% endfor %}
-                </div>
-
-                <div class="mt-3">
-                    <a href="/chat/new/" class="btn btn-sm btn-primary w-100">
-                        ➕ New
+<div class="room-shell">
+    <div class="card room-card">
+        <div class="card-body p-3">
+            <h5 class="mb-3">Workrooms</h5>
+            <div class="room-list">
+                {% for conv in all_conversations %}
+                    <a href="{% url 'chat_conversation' conv.id %}" class="{% if conv.id == conversation.id %}active{% endif %}">
+                        <div class="fw-semibold">{{ conv.title }}</div>
+                        <small class="text-muted">{{ conv.messages.count }} messages</small>
                     </a>
-                </div>
-
-                <hr>
-
-                <div class="llm-info">
-                    <small>
-                        <strong>Provider:</strong> {{ llm_info.provider|upper }}<br>
-                        <strong>Model:</strong> {{ llm_info.model }}
-                    </small>
-                </div>
+                {% endfor %}
             </div>
+            <a href="{% url 'create_conversation' %}" class="btn btn-primary w-100 mt-2">New Workroom</a>
+            <a href="{% url 'index' %}" class="btn btn-outline-secondary w-100 mt-2">Dashboard</a>
         </div>
     </div>
 
-    <div class="col-md-9">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <div class="card room-card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
                 <h5 class="mb-0">{{ conversation.title }}</h5>
-                <form method="post" action="{% url 'delete_conversation' conversation.id %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-light" 
-                            onclick="return confirm('Delete this conversation?');">
-                        🗑️ Delete
-                    </button>
-                </form>
+                <small class="text-muted">Room #{{ conversation.id }} · {{ conversation.messages.count }} messages</small>
+            </div>
+            <form method="post" action="{% url 'delete_conversation' conversation.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Archive this workroom?');">
+                    Archive
+                </button>
+            </form>
+        </div>
+
+        <div class="card-body">
+            <div class="msg-wrap mb-3">
+                {% if conversation.messages.all %}
+                    {% for message in conversation.messages.all %}
+                        <div class="msg {% if message.role == 'user' %}msg-user{% else %}msg-ai{% endif %}">
+                            {{ message.content|linebreaks }}
+                            {% if message.tokens_used > 0 %}
+                                <small class="d-block mt-2" style="opacity: .8;">tokens: {{ message.tokens_used }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info mb-0">No messages yet. Start by describing the production issue, target outcome, and constraints.</div>
+                {% endif %}
             </div>
 
-            <div class="card-body">
-                <!-- Chat Messages -->
-                <div class="chat-container">
-                    {% if conversation.messages.all %}
-                        {% for message in conversation.messages.all %}
-                            <div class="d-flex {% if message.role == 'user' %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
-                                <div class="{% if message.role == 'user' %}message-user{% else %}message-assistant{% endif %}">
-                                    {{ message.content|linebreaks }}
-                                    {% if message.tokens_used > 0 %}
-                                        <small class="text-muted d-block mt-2" style="font-size: 0.75em;">
-                                            Tokens: {{ message.tokens_used }}
-                                        </small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="alert alert-info">
-                            No messages yet. Start the conversation!
-                        </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.content }}
+                    {% if form.content.errors %}
+                        <div class="alert alert-danger mt-2 mb-0">{{ form.content.errors }}</div>
                     {% endif %}
                 </div>
+                <button type="submit" class="btn btn-primary w-100">Send to Workroom AI</button>
+            </form>
 
-                <!-- Message Form -->
-                <form method="post" class="message-form">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        {{ form.content }}
-                        {% if form.content.errors %}
-                            <div class="alert alert-danger mt-2">
-                                {{ form.content.errors }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        Send Message 📤
-                    </button>
-                </form>
-
-                <small class="text-muted d-block mt-2">
-                    Conversation ID: {{ conversation.id }} | Messages: {{ conversation.messages.count }}
-                </small>
-            </div>
+            <small class="text-muted d-block mt-2">Provider: {{ llm_info.provider|upper }} · Model: {{ llm_info.model }}</small>
         </div>
     </div>
 </div>
-
-<style>
-    .chat-container {
-        max-height: 500px;
-        overflow-y: auto;
-        padding: 15px;
-        background-color: #f9f9f9;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-
-    .list-group-item.active {
-        background-color: #667eea;
-        border-color: #667eea;
-    }
-</style>
 {% endblock %}

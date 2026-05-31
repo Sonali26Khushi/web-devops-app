@@ -1,49 +1,76 @@
 {% extends "base.html" %}
 
-{% block title %}Create New Conversation{% endblock %}
+{% block title %}Create Workroom{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-card {
+        border: none;
+        border-radius: 18px;
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+    }
+
+    .setup-panel {
+        background: linear-gradient(145deg, #1e293b, #0f766e);
+        color: #f0fdfa;
+        border-radius: 18px 0 0 18px;
+        padding: 28px;
+        height: 100%;
+    }
+
+    .setup-form {
+        padding: 28px;
+        background: #f8fafc;
+    }
+
+    .setup-form .form-control {
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        padding: 10px 12px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="card-title mb-4">Start New Conversation</h2>
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card setup-card overflow-hidden">
+            <div class="row g-0">
+                <div class="col-md-5">
+                    <div class="setup-panel">
+                        <h2 class="h4">Create a Workroom</h2>
+                        <p class="mb-3">A workroom is your focused space for solving one real problem end-to-end.</p>
+                        <ul class="mb-0">
+                            <li>Incident response timeline</li>
+                            <li>Root-cause investigation notes</li>
+                            <li>Release plan and rollback strategy</li>
+                            <li>Postmortem draft and action items</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="setup-form">
+                        <h3 class="h4 mb-2">Workroom Details</h3>
+                        <p class="text-muted mb-4">Use a precise title so teammates understand the room objective immediately.</p>
 
-                <form method="post">
-                    {% csrf_token %}
-
-                    <div class="mb-3">
-                        <label for="{{ form.title.id_for_label }}" class="form-label">
-                            Conversation Title
-                        </label>
-                        {{ form.title }}
-                        {% if form.title.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ form.title.errors }}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Workroom Title</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.title.errors }}</div>
+                                {% endif %}
                             </div>
-                        {% endif %}
+
+                            <div class="d-grid gap-2 mb-3">
+                                <button type="submit" class="btn btn-primary btn-lg">Create Workroom</button>
+                            </div>
+
+                            <a href="{% url 'chat_home' %}" class="btn btn-outline-secondary w-100">Back to Workrooms</a>
+                        </form>
                     </div>
-
-                    <div class="d-grid gap-2 mb-3">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            ✨ Create Conversation
-                        </button>
-                    </div>
-
-                    <a href="/chat/" class="btn btn-outline-secondary w-100">
-                        Back to Conversations
-                    </a>
-                </form>
-
-                <hr class="my-4">
-
-                <h5>Conversation Tips:</h5>
-                <ul>
-                    <li>Give your conversation a descriptive title</li>
-                    <li>Each conversation maintains its own message history</li>
-                    <li>The AI learns from your previous messages in this chat</li>
-                    <li>You can delete conversations anytime</li>
-                </ul>
+                </div>
             </div>
         </div>
     </div>

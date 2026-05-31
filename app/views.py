@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.db.models import Sum
 
 from .models import AppEvent, Conversation, Message, SearchRecord
 from .forms import ConversationForm, LoginForm, MessageForm, RegisterForm
@@ -67,6 +68,7 @@ def next_task_id(request):
 @login_required(login_url="login")
 def index(request):
     now_utc = datetime.now(timezone.utc).isoformat()
+    now_utc_clock = datetime.now(timezone.utc).strftime("%H:%M:%S")
     hit_count, cache_backend = get_cache_hits()
     tasks = get_tasks(request)
 
@@ -139,8 +141,24 @@ def index(request):
     open_tasks = sum(1 for task in tasks if not task.get("done", False))
     completed_tasks = len(tasks) - open_tasks
 
+    conversation_count = Conversation.objects.filter(user=request.user, is_active=True).count()
+    message_count = (
+        Message.objects.filter(conversation__user=request.user, conversation__is_active=True).count()
+    )
+    token_total = (
+        Message.objects.filter(conversation__user=request.user, conversation__is_active=True)
+        .aggregate(total=Sum("tokens_used"))
+        .get("total")
+        or 0
+    )
+    recent_sessions = Conversation.objects.filter(
+        user=request.user,
+        is_active=True,
+    )[:4]
+
     context = {
         "now_utc": now_utc,
+        "now_utc_clock": now_utc_clock,
         "hit_count": hit_count,
         "db_events": db_events,
         "db_backend": db_backend_name(),
@@ -150,6 +168,10 @@ def index(request):
         "open_tasks": open_tasks,
         "completed_tasks": completed_tasks,
         "today_label": datetime.now(timezone.utc).strftime("%A, %d %B %Y"),
+        "session_count": conversation_count,
+        "message_count": message_count,
+        "token_total": token_total,
+        "recent_sessions": recent_sessions,
     }
     return render(request, "index.html", context)
 
@@ -268,12 +290,92 @@ def agent(request):
 
 
 # ============================================================================
-# LLM Chat Views
+# Focus Session Views (DevPulse)
 # ============================================================================
 
 
+@login_required(login_url="login")
+def sessions_home(request):
+    """List all active focus sessions for the signed-in user."""
+    sessions = Conversation.objects.filter(user=request.user, is_active=True)
+    llm_info = LLMService().get_provider_info()
+    return render(request, "sessions/list.html", {"sessions": sessions, "llm_info": llm_info})
+
+
+@login_required(login_url="login")
+def create_session(request):
+    """Create a new focus session."""
+    if request.method == "POST":
+        form = ConversationForm(request.POST)
+        if form.is_valid():
+            session = form.save(commit=False)
+            session.user = request.user
+            session.save()
+            messages.success(request, f'Session "{session.title}" created.')
+            return redirect("session_workspace", session_id=session.id)
+    else:
+        form = ConversationForm()
+    return render(request, "sessions/create.html", {"form": form})
+
+
+@login_required(login_url="login")
+def session_workspace(request, session_id):
+    """Active focus session with AI."""
+    session = get_object_or_404(Conversation, id=session_id, user=request.user, is_active=True)
+
+    if request.method == "POST":
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            user_message = form.cleaned_data["content"]
+            Message.objects.create(conversation=session, role="user", content=user_message)
+            history = [
+                {"role": m.role, "content": m.content}
+                for m in session.messages.all()
+            ]
+            llm = LLMService()
+            result = llm.generate_response(messages=history, temperature=0.7, max_tokens=600)
+            if not result.get("error", False):
+                Message.objects.create(
+                    conversation=session,
+                    role="assistant",
+                    content=result["response"],
+                    tokens_used=result.get("tokens_used", 0),
+                )
+            else:
+                messages.error(request, f"AI error: {result.get('response', 'Unknown')}")
+            return redirect("session_workspace", session_id=session_id)
+    else:
+        form = MessageForm()
+
+    all_sessions = Conversation.objects.filter(user=request.user, is_active=True)
+    llm_info = LLMService().get_provider_info()
+    return render(request, "sessions/workspace.html", {
+        "session": session,
+        "all_sessions": all_sessions,
+        "form": form,
+        "llm_info": llm_info,
+    })
+
+
+@login_required(login_url="login")
+@require_http_methods(["POST"])
+def end_session(request, session_id):
+    """Archive (soft-delete) a focus session."""
+    session = get_object_or_404(Conversation, id=session_id, user=request.user)
+    session.is_active = False
+    session.save()
+    messages.success(request, "Session archived.")
+    return redirect("sessions_home")
+
+
+# ============================================================================
+# Legacy LLM Chat Views (kept for backward compat, not exposed in URLs)
+# ============================================================================
+
+
+@login_required(login_url="login")
 def chat_home(request):
-    """Display list of conversations or redirect to create new one"""
+    """Legacy workroom list (not in primary navigation)."""
     conversations = Conversation.objects.filter(user=request.user, is_active=True)
     llm_info = LLMService().get_provider_info()
 
@@ -286,7 +388,7 @@ def chat_home(request):
 
 @login_required(login_url="login")
 def chat_demo(request):
-    """Public demo chat without authentication"""
+    """Legacy demo chat route (not exposed in main navigation)"""
     if request.method == "POST":
         user_message = request.POST.get("message", "").strip()
 
@@ -487,7 +589,7 @@ def _seed_records():
 
 @login_required(login_url="login")
 def search_home(request):
-    """Main Smart Search page"""
+    """Legacy Smart Search route (not exposed in main navigation)"""
     _seed_records()
 
     query = request.GET.get("q", "").strip()

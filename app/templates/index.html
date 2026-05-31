@@ -1,78 +1,154 @@
 {% extends "base.html" %}
+{% block title %}Dashboard — DevPulse{% endblock %}
 
-{% block title %}Home - AI Chat Application{% endblock %}
+{% block extra_css %}
+<style>
+.page-header { margin-bottom: 24px; }
+.greeting { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+.date-line { color: #64748b; font-size: 0.9rem; }
+.stat-bar { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-tile { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+.stat-num { font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1; }
+.stat-label { font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+.stat-tile.accent .stat-num { color: #059669; }
+.section-title { font-size: 0.95rem; font-weight: 700; color: #374151; margin-bottom: 12px; }
+.task-row { display: flex; align-items: flex-start; gap: 10px; padding: 11px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; margin-bottom: 8px; }
+.task-row.done .task-text { text-decoration: line-through; color: #94a3b8; }
+.task-text { font-weight: 600; font-size: 0.9rem; flex: 1; }
+.task-note { font-size: 0.82rem; color: #64748b; margin-top: 2px; }
+.task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.btn-xs { padding: 4px 10px; font-size: 0.78rem; border-radius: 6px; font-weight: 600; border: 1px solid; cursor: pointer; background: transparent; }
+.btn-xs-green { color: #059669; border-color: #a7f3d0; }
+.btn-xs-green:hover { background: #ecfdf5; }
+.btn-xs-warn { color: #d97706; border-color: #fde68a; }
+.btn-xs-warn:hover { background: #fffbeb; }
+.btn-xs-red { color: #dc2626; border-color: #fca5a5; }
+.btn-xs-red:hover { background: #fef2f2; }
+.add-task-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 12px; }
+.runtime-list { list-style: none; padding: 0; margin: 0; }
+.runtime-list li { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.88rem; }
+.runtime-list li:last-child { border-bottom: none; }
+.runtime-val { font-weight: 700; color: #0f172a; }
+.session-link { display: block; text-decoration: none; padding: 11px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; margin-bottom: 8px; transition: border-color 0.15s; }
+.session-link:hover { border-color: #059669; }
+.session-link-title { font-weight: 700; font-size: 0.9rem; color: #0f172a; }
+.session-link-meta { font-size: 0.8rem; color: #64748b; margin-top: 1px; }
+.empty-note { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 16px; color: #64748b; font-size: 0.9rem; text-align: center; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <h1 class="mb-3">🤖 Welcome to AI Chat App</h1>
-                <p class="lead">Experience intelligent conversations powered by advanced AI models</p>
+<div class="page-header">
+    <div class="greeting">Good work, {{ user.username }}</div>
+    <div class="date-line">{{ today_label }} &nbsp;·&nbsp; {{ now_utc_clock }} UTC</div>
+</div>
 
-                <div class="d-grid gap-2 my-4">
-                    <a href="/chat/demo/" class="btn btn-primary btn-lg">
-                        Try Demo Chat 🚀
-                    </a>
-                    {% if user.is_authenticated %}
-                        <a href="/chat/" class="btn btn-outline-primary btn-lg">
-                            My Conversations 💬
-                        </a>
-                    {% else %}
-                        <a href="/admin/login/" class="btn btn-outline-primary btn-lg">
-                            Login to Save Conversations 🔐
-                        </a>
-                    {% endif %}
-                </div>
+<div class="stat-bar">
+    <div class="stat-tile accent">
+        <div class="stat-num">{{ session_count }}</div>
+        <div class="stat-label">Focus Sessions</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-num">{{ open_tasks }}</div>
+        <div class="stat-label">Open Tasks</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-num">{{ completed_tasks }}</div>
+        <div class="stat-label">Done Today</div>
+    </div>
+    <div class="stat-tile">
+        <div class="stat-num">{{ message_count }}</div>
+        <div class="stat-label">AI Messages</div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left: Task Board -->
+    <div class="col-lg-7">
+        <div class="dp-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="section-title mb-0">Execution Task Board</div>
+                {% if completed_tasks > 0 %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="clear_completed">
+                    <button type="submit" class="btn-xs btn-xs-red">Clear done</button>
+                </form>
+                {% endif %}
             </div>
+
+            <form method="post" class="add-task-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <input name="task" class="dp-input" placeholder="Task title…" required>
+                <input name="note" class="dp-input" placeholder="Note or context (optional)">
+                <button type="submit" class="btn-emerald">Add</button>
+            </form>
+
+            {% if tasks %}
+                {% for task in tasks %}
+                <div class="task-row {% if task.done %}done{% endif %}">
+                    <div class="flex-grow-1">
+                        <div class="task-text">{{ task.title }}</div>
+                        {% if task.note %}<div class="task-note">{{ task.note }}</div>{% endif %}
+                    </div>
+                    <div class="task-actions">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle">
+                            <input type="hidden" name="task_id" value="{{ task.id }}">
+                            <button type="submit" class="btn-xs {% if task.done %}btn-xs-warn{% else %}btn-xs-green{% endif %}">
+                                {% if task.done %}Undo{% else %}Done{% endif %}
+                            </button>
+                        </form>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="remove">
+                            <input type="hidden" name="task_id" value="{{ task.id }}">
+                            <button type="submit" class="btn-xs btn-xs-red">Remove</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-note">No tasks yet. Add your first execution task above.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right: Sessions + Runtime -->
+    <div class="col-lg-5">
+        <div class="dp-card mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="section-title mb-0">Recent Focus Sessions</div>
+                <a href="{% url 'create_session' %}" class="btn-emerald" style="border-radius:8px; padding:6px 14px; font-size:0.8rem; font-weight:600; color:#fff; text-decoration:none;">+ New</a>
+            </div>
+            {% if recent_sessions %}
+                {% for s in recent_sessions %}
+                <a href="{% url 'session_workspace' s.id %}" class="session-link">
+                    <div class="session-link-title">{{ s.title }}</div>
+                    <div class="session-link-meta">{{ s.messages.count }} messages · {{ s.updated_at|date:"M d, H:i" }}</div>
+                </a>
+                {% endfor %}
+                <a href="{% url 'sessions_home' %}" style="font-size:0.82rem; color:#059669; text-decoration:none; font-weight:600;">View all sessions →</a>
+            {% else %}
+                <div class="empty-note">
+                    No sessions yet.<br>
+                    <a href="{% url 'create_session' %}" style="color:#059669; font-weight:600;">Start your first focus session</a>
+                </div>
+            {% endif %}
         </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">📊 System Status</h5>
-                        <ul class="list-unstyled">
-                            <li><strong>Database:</strong> {{ db_backend }} ✅</li>
-                            <li><strong>Cache:</strong> {{ cache_backend }} ✅</li>
-                            <li><strong>Page Views:</strong> {{ hit_count }}</li>
-                            <li><strong>Total Events:</strong> {{ db_events }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">📝 Your Tasks</h5>
-                        <p><strong>Open:</strong> {{ open_tasks }} | <strong>Completed:</strong> {{ completed_tasks }}</p>
-                        <p class="text-muted small">{{ today_label }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">✨ Features</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <ul>
-                            <li>💬 Intelligent AI conversations</li>
-                            <li>💾 Save and organize conversations</li>
-                            <li>🔄 Conversation history support</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <ul>
-                            <li>🚀 Multiple LLM providers</li>
-                            <li>📊 Token tracking</li>
-                            <li>🔐 User authentication</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        <div class="dp-card">
+            <div class="section-title">System Status</div>
+            <ul class="runtime-list">
+                <li><span>Database</span><span class="runtime-val">{{ db_backend }}</span></li>
+                <li><span>Cache</span><span class="runtime-val">{{ cache_backend }}</span></li>
+                <li><span>Page hits</span><span class="runtime-val">{{ hit_count }}</span></li>
+                <li><span>App events</span><span class="runtime-val">{{ db_events }}</span></li>
+                <li><span>UTC clock</span><span class="runtime-val">{{ now_utc_clock }}</span></li>
+            </ul>
+            <a href="{% url 'health' %}" target="_blank" style="font-size:0.82rem; color:#059669; text-decoration:none; font-weight:600;">Full health check →</a>
         </div>
     </div>
 </div>

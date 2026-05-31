@@ -10,14 +10,9 @@ urlpatterns = [
     path("api/health", views.health, name="health"),
     path("api/agent", views.agent, name="agent"),
     path("api/widget-chat/", views.widget_chat, name="widget_chat"),
-    # Chat views
-    path("chat/", views.chat_home, name="chat_home"),
-    path("chat/demo/", views.chat_demo, name="chat_demo"),
-    path("chat/new/", views.create_conversation, name="create_conversation"),
-    path("chat/<int:conversation_id>/", views.chat_conversation, name="chat_conversation"),
-    path("chat/<int:conversation_id>/delete/", views.delete_conversation, name="delete_conversation"),
-    # Smart Search
-    path("search/", views.search_home, name="search_home"),
-    path("search/add/", views.add_search_record, name="add_search_record"),
-    path("search/delete/<int:record_id>/", views.delete_search_record, name="delete_search_record"),
+    # Focus Sessions
+    path("sessions/", views.sessions_home, name="sessions_home"),
+    path("sessions/new/", views.create_session, name="create_session"),
+    path("sessions/<int:session_id>/", views.session_workspace, name="session_workspace"),
+    path("sessions/<int:session_id>/end/", views.end_session, name="end_session"),
 ]

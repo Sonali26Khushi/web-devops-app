@@ -3,330 +3,453 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SimpleShop - AI Chat{% endblock %}</title>
+    <title>{% block title %}DevPulse{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
             min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* ── Floating Chat Widget ──────────────────────────────── */
-        #chat-widget-btn {
+        /* ── Sidebar ───────────────────────────────────────── */
+        .sidebar {
             position: fixed;
-            bottom: 28px;
-            right: 28px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            box-shadow: 0 4px 20px rgba(102,126,234,.5);
-            cursor: pointer;
-            z-index: 9998;
+            top: 0; left: 0; bottom: 0;
+            width: 240px;
+            background: #0f172a;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform .2s, box-shadow .2s;
-        }
-        #chat-widget-btn:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(102,126,234,.7); }
-        #chat-widget-btn i { color: white; font-size: 24px; }
-        #chat-widget-bubble {
-            position: fixed;
-            bottom: 96px;
-            right: 28px;
-            width: 340px;
-            max-height: 480px;
-            background: white;
-            border-radius: 18px;
-            box-shadow: 0 8px 40px rgba(0,0,0,.18);
-            z-index: 9999;
-            display: none;
             flex-direction: column;
-            overflow: hidden;
+            z-index: 200;
+            overflow-y: auto;
         }
-        #chat-widget-bubble.open { display: flex; }
-        .cw-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 16px;
+
+        .sidebar-brand {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            font-weight: 600;
+            gap: 10px;
+            padding: 22px 20px 18px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            margin-bottom: 8px;
         }
-        .cw-header small { font-weight: 400; opacity: .85; font-size: .75rem; }
-        .cw-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 14px;
-            background: #f9f9fc;
-            max-height: 320px;
-        }
-        .cw-msg { display: flex; margin-bottom: 10px; }
-        .cw-msg.user { justify-content: flex-end; }
-        .cw-msg .bubble {
-            max-width: 78%;
-            padding: 8px 12px;
-            border-radius: 14px;
-            font-size: .875rem;
-            line-height: 1.4;
-        }
-        .cw-msg.user .bubble { background: #667eea; color: white; border-bottom-right-radius: 4px; }
-        .cw-msg.ai   .bubble { background: #e9ecef; color: #333;  border-bottom-left-radius: 4px; }
-        .cw-footer {
-            padding: 10px;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 6px;
-        }
-        .cw-footer input {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            padding: 7px 14px;
-            font-size: .85rem;
-            outline: none;
-        }
-        .cw-footer input:focus { border-color: #667eea; }
-        .cw-footer button {
-            background: #667eea;
-            border: none;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
+
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #059669, #0d9488);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
-        .cw-footer button:hover { background: #764ba2; }
-        .cw-typing { font-size: .78rem; color: #aaa; padding: 0 14px 8px; }
-        /* ────────────────────────────────────────────────────────── */
-        .navbar {
-            background-color: rgba(102, 126, 234, 0.9);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        .brand-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #f8fafc;
+            letter-spacing: -0.01em;
         }
-        .container-main {
-            max-width: 1200px;
-            margin-top: 20px;
-            margin-bottom: 20px;
+
+        .brand-tagline {
+            font-size: 0.68rem;
+            color: rgba(148,163,184,0.9);
+            letter-spacing: 0.02em;
         }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+
+        .nav-section-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(100,116,139,0.9);
+            padding: 10px 20px 4px;
+            margin-top: 6px;
         }
-        .btn-primary {
-            background-color: #667eea;
-            border: none;
-            border-radius: 25px;
-            padding: 8px 24px;
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 16px;
+            margin: 1px 8px;
+            border-radius: 8px;
+            color: rgba(203,213,225,0.88);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
         }
-        .btn-primary:hover {
-            background-color: #764ba2;
+
+        .nav-link-item:hover {
+            background: rgba(255,255,255,0.07);
+            color: #f8fafc;
         }
-        .message-user {
-            background-color: #667eea;
-            color: white;
-            border-radius: 15px;
-            padding: 10px 15px;
-            margin: 10px 0;
-            max-width: 70%;
-            word-wrap: break-word;
+
+        .nav-link-item.active {
+            background: rgba(5,150,105,0.2);
+            color: #6ee7b7;
         }
-        .message-assistant {
-            background-color: #f0f0f0;
-            color: #333;
-            border-radius: 15px;
-            padding: 10px 15px;
-            margin: 10px 0;
-            max-width: 70%;
-            word-wrap: break-word;
-        }
-        .chat-container {
-            height: 500px;
-            overflow-y: auto;
-            background-color: #fafafa;
-            border-radius: 15px;
-            padding: 20px;
-        }
-        .message-form {
-            margin-top: 20px;
-        }
-        .conversation-item {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .conversation-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .llm-info {
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 10px 15px;
-            font-size: 0.9em;
-            color: white;
-        }
-        .demo-warning {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-        footer {
-            background-color: rgba(0,0,0,0.2);
-            color: white;
-            padding: 20px;
+
+        .nav-link-item i {
+            width: 18px;
             text-align: center;
-            margin-top: 40px;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            padding: 14px 12px;
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #059669, #0d9488);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: rgba(148,163,184,0.7);
+            font-size: 0.85rem;
+            transition: color 0.15s;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .logout-btn:hover { color: #f87171; }
+
+        /* ── Main content ──────────────────────────────────── */
+        .main-content {
+            margin-left: 240px;
+            min-height: 100vh;
+            padding: 28px 32px;
+            background: #f1f5f9;
+        }
+
+        /* ── Alerts ────────────────────────────────────────── */
+        .alert {
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* ── Cards ─────────────────────────────────────────── */
+        .dp-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        /* ── Buttons ───────────────────────────────────────── */
+        .btn-emerald {
+            background: #059669;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: background 0.15s;
+        }
+
+        .btn-emerald:hover { background: #047857; color: #fff; }
+
+        .btn-ghost {
+            background: transparent;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 500;
+            font-size: 0.88rem;
+            transition: all 0.15s;
+        }
+
+        .btn-ghost:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+
+        /* ── Form controls ─────────────────────────────────── */
+        .dp-input {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 0.9rem;
+            width: 100%;
+            background: #fff;
+            color: #1e293b;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .dp-input:focus {
+            outline: none;
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
+        }
+
+        /* ── Floating AI widget ────────────────────────────── */
+        #ai-widget-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #059669;
+            border: none;
+            box-shadow: 0 6px 20px rgba(5,150,105,0.45);
+            cursor: pointer;
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+
+        #ai-widget-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 26px rgba(5,150,105,0.6);
+        }
+
+        #ai-widget-btn i { color: white; font-size: 20px; }
+
+        #ai-widget-bubble {
+            position: fixed;
+            bottom: 84px;
+            right: 24px;
+            width: 330px;
+            max-height: 460px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 16px 48px rgba(15,23,42,0.18);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        #ai-widget-bubble.open { display: flex; }
+
+        .aiw-header {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .aiw-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            background: #f8fafc;
+            max-height: 300px;
+        }
+
+        .aiw-msg { display: flex; margin-bottom: 8px; }
+        .aiw-msg.user { justify-content: flex-end; }
+        .aiw-msg .bubble {
+            max-width: 80%;
+            padding: 8px 11px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .aiw-msg.user .bubble { background: #059669; color: white; }
+        .aiw-msg.ai .bubble { background: #e2e8f0; color: #1e293b; }
+
+        .aiw-typing { font-size: 0.76rem; color: #94a3b8; padding: 0 12px 6px; }
+
+        .aiw-footer {
+            padding: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 6px;
+        }
+
+        .aiw-footer input {
+            flex: 1;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 7px 12px;
+            font-size: 0.84rem;
+            outline: none;
+        }
+
+        .aiw-footer input:focus { border-color: #059669; }
+
+        .aiw-footer button {
+            background: #059669;
+            border: none;
+            color: white;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .aiw-footer button:hover { background: #047857; }
+
+        /* ── Responsive ────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main-content { margin-left: 0; padding: 16px; }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">🤖 AI Chat App</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/chat/demo/">Demo Chat</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/search/">🔍 Smart Search</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/chat/">My Chats</a>
-                    </li>
-                    <li class="nav-item">
-                        <form method="post" action="/logout/" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="nav-link btn btn-link border-0 p-0">Logout ({{ user.username }})</button>
-                        </form>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login/">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/register/">Register</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
+
+{% if user.is_authenticated %}
+<nav class="sidebar">
+    <a class="sidebar-brand" href="{% url 'index' %}">
+        <div class="brand-icon"><i class="bi bi-lightning-fill" style="color:white;font-size:1rem;"></i></div>
+        <div>
+            <div class="brand-name">DevPulse</div>
+            <div class="brand-tagline">Productivity Platform</div>
         </div>
-    </nav>
+    </a>
 
-    <div class="container-main">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+    <div class="nav-section-label">Workspace</div>
+    <a class="nav-link-item" href="{% url 'index' %}"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+    <a class="nav-link-item" href="{% url 'sessions_home' %}"><i class="bi bi-layers"></i> Focus Sessions</a>
+    <a class="nav-link-item" href="{% url 'create_session' %}"><i class="bi bi-plus-circle"></i> New Session</a>
 
-        {% block content %}{% endblock %}
-    </div>
+    <div class="nav-section-label">System</div>
+    <a class="nav-link-item" href="{% url 'health' %}" target="_blank" rel="noopener"><i class="bi bi-activity"></i> Health Check</a>
+    <a class="nav-link-item" href="/admin/" target="_blank" rel="noopener"><i class="bi bi-shield-lock"></i> Admin Panel</a>
 
-    <footer>
-        <p>&copy; 2024 AI Chat Application. Powered by Django & LLM</p>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
-
-    {% if user.is_authenticated %}
-    <!-- ── Floating Chat Widget ─────────────────────────────── -->
-    <button id="chat-widget-btn" title="Ask AI">
-        <i class="bi bi-chat-dots-fill"></i>
-    </button>
-
-    <div id="chat-widget-bubble">
-        <div class="cw-header">
-            <div>
-                <i class="bi bi-robot me-1"></i> AI Assistant
-                <br><small>Ask me anything</small>
-            </div>
-            <button onclick="toggleChat()" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-        <div class="cw-body" id="cw-messages">
-            <div class="cw-msg ai">
-                <div class="bubble">Hi! I'm your AI assistant. How can I help you?</div>
-            </div>
-        </div>
-        <div class="cw-typing" id="cw-typing" style="display:none;">AI is typing…</div>
-        <div class="cw-footer">
-            <input type="text" id="cw-input" placeholder="Type a message…" onkeydown="if(event.key==='Enter') sendWidgetMsg()" />
-            <button onclick="sendWidgetMsg()"><i class="bi bi-send-fill"></i></button>
+    <div class="sidebar-footer">
+        <div class="user-chip">
+            <div class="user-avatar">{{ user.username|slice:":1"|upper }}</div>
+            <div class="user-name">{{ user.username }}</div>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn" title="Sign out"><i class="bi bi-box-arrow-right"></i></button>
+            </form>
         </div>
     </div>
+</nav>
+{% endif %}
 
-    <script>
-    function toggleChat() {
-        const bubble = document.getElementById('chat-widget-bubble');
-        bubble.classList.toggle('open');
-        if (bubble.classList.contains('open')) {
-            document.getElementById('cw-input').focus();
-        }
-    }
-    document.getElementById('chat-widget-btn').addEventListener('click', toggleChat);
-
-    function appendMsg(role, text) {
-        const box = document.getElementById('cw-messages');
-        const div = document.createElement('div');
-        div.className = 'cw-msg ' + (role === 'user' ? 'user' : 'ai');
-        div.innerHTML = '<div class="bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</div>';
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-    }
-
-    async function sendWidgetMsg() {
-        const input = document.getElementById('cw-input');
-        const msg = input.value.trim();
-        if (!msg) return;
-        input.value = '';
-        appendMsg('user', msg);
-        document.getElementById('cw-typing').style.display = 'block';
-        try {
-            const resp = await fetch('/api/widget-chat/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                body: JSON.stringify({ message: msg })
-            });
-            const data = await resp.json();
-            document.getElementById('cw-typing').style.display = 'none';
-            appendMsg('ai', data.response || data.error || 'Sorry, something went wrong.');
-        } catch(e) {
-            document.getElementById('cw-typing').style.display = 'none';
-            appendMsg('ai', 'Network error. Please try again.');
-        }
-    }
-
-    function getCookie(name) {
-        const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
-        return v ? v[2] : '';
-    }
-    </script>
-    <!-- ─────────────────────────────────────────────────────── -->
+<div class="{% if user.is_authenticated %}main-content{% else %}container-fluid p-0{% endif %}">
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+
+{% if user.is_authenticated %}
+<button id="ai-widget-btn" title="Ask AI"><i class="bi bi-robot"></i></button>
+<div id="ai-widget-bubble">
+    <div class="aiw-header">
+        <span><i class="bi bi-robot me-1"></i> AI Assistant</span>
+        <button onclick="toggleAI()" style="background:none;border:none;color:#94a3b8;cursor:pointer;"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="aiw-body" id="aiw-msgs">
+        <div class="aiw-msg ai"><div class="bubble">Hi! Ask me anything — code help, debugging, architecture questions.</div></div>
+    </div>
+    <div class="aiw-typing" id="aiw-typing" style="display:none;">Thinking…</div>
+    <div class="aiw-footer">
+        <input type="text" id="aiw-input" placeholder="Ask a question…" onkeydown="if(event.key==='Enter') sendAI()">
+        <button onclick="sendAI()"><i class="bi bi-send-fill"></i></button>
+    </div>
+</div>
+<script>
+function toggleAI() {
+    const b = document.getElementById('ai-widget-bubble');
+    b.classList.toggle('open');
+    if (b.classList.contains('open')) document.getElementById('aiw-input').focus();
+}
+document.getElementById('ai-widget-btn').addEventListener('click', toggleAI);
+function appendAIMsg(role, text) {
+    const box = document.getElementById('aiw-msgs');
+    const d = document.createElement('div');
+    d.className = 'aiw-msg ' + (role === 'user' ? 'user' : 'ai');
+    d.innerHTML = '<div class="bubble">' + text.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') + '</div>';
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+}
+async function sendAI() {
+    const inp = document.getElementById('aiw-input');
+    const msg = inp.value.trim();
+    if (!msg) return;
+    inp.value = '';
+    appendAIMsg('user', msg);
+    document.getElementById('aiw-typing').style.display = 'block';
+    try {
+        const r = await fetch('/api/widget-chat/', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+            body: JSON.stringify({message: msg})
+        });
+        const data = await r.json();
+        document.getElementById('aiw-typing').style.display = 'none';
+        appendAIMsg('ai', data.response || data.error || 'No response.');
+    } catch(e) {
+        document.getElementById('aiw-typing').style.display = 'none';
+        appendAIMsg('ai', 'Network error. Try again.');
+    }
+}
+function getCookie(n) {
+    const v = document.cookie.match('(^|;) ?' + n + '=([^;]*)(;|$)');
+    return v ? v[2] : '';
+}
+</script>
+{% endif %}
 </body>
 </html>

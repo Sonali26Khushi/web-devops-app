@@ -14,9 +14,9 @@ class MessageForm(forms.ModelForm):
         widgets = {
             "content": forms.Textarea(
                 attrs={
-                    "rows": 3,
-                    "placeholder": "Type your message here...",
-                    "class": "form-control",
+                    "rows": 2,
+                    "placeholder": "Ask anything…",
+                    "class": "dp-input",
                 }
             ),
         }
@@ -31,8 +31,9 @@ class ConversationForm(forms.ModelForm):
         widgets = {
             "title": forms.TextInput(
                 attrs={
-                    "placeholder": "Conversation title",
-                    "class": "form-control",
+                    "placeholder": "e.g. Debug failing API endpoint",
+                    "class": "field-input",
+                    "autofocus": True,
                 }
             ),
         }
@@ -43,8 +44,8 @@ class RegisterForm(UserCreationForm):
         required=True,
         widget=forms.EmailInput(
             attrs={
-                "class": "form-control",
-                "placeholder": "Email address",
+                "class": "field-input",
+                "placeholder": "you@example.com",
             }
         ),
     )
@@ -56,13 +57,13 @@ class RegisterForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["username"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Username"}
+            {"class": "field-input", "placeholder": "your_username"}
         )
         self.fields["password1"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Password"}
+            {"class": "field-input", "placeholder": "Min 8 characters"}
         )
         self.fields["password2"].widget.attrs.update(
-            {"class": "form-control", "placeholder": "Confirm password"}
+            {"class": "field-input", "placeholder": "Repeat password"}
         )
 
     def save(self, commit=True):
@@ -76,11 +77,11 @@ class RegisterForm(UserCreationForm):
 class LoginForm(AuthenticationForm):
     username = forms.CharField(
         widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Username"}
+            attrs={"class": "field-input", "placeholder": "Username", "autofocus": True}
         )
     )
     password = forms.CharField(
         widget=forms.PasswordInput(
-            attrs={"class": "form-control", "placeholder": "Password"}
+            attrs={"class": "field-input", "placeholder": "Password"}
         )
     )
