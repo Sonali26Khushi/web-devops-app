@@ -1,13 +1,13 @@
 name: Build and Test
 on:
   push:
-    branches: 
+    branches:
       - main
       - update-docker-file
-    pull_request:
-      branches: 
-        - main
-        - update-docker-file
+  pull_request:
+    branches:
+      - main
+      - update-docker-file
 jobs:
   build_test:
     runs-on: ubuntu-latest
