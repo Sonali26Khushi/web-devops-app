@@ -68,9 +68,7 @@ if not database_url:
         f"{postgres_host}:{postgres_port}/{postgres_db}"
     )
 
-DATABASES = {
-    "default": dj_database_url.parse(database_url, conn_max_age=600)
-}
+DATABASES = {"default": dj_database_url.parse(database_url, conn_max_age=600)}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -82,7 +80,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Security — active when DEBUG=False
-CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+CSRF_TRUSTED_ORIGINS = [
+    o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o
+]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 LOGIN_URL = "/login/"
