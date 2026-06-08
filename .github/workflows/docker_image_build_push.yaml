@@ -1,14 +1,17 @@
 name: Build and Push
 
 on:
-  push:
-    branches: 
+  workflow_run:
+    workflows: ["Build and Test"]
+    types:
+      - completed
+    branches:
       - main
       - update-docker-file
 
 jobs:
   build_push:
-    needs: build_test
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
