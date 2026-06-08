@@ -141,12 +141,16 @@ def index(request):
     open_tasks = sum(1 for task in tasks if not task.get("done", False))
     completed_tasks = len(tasks) - open_tasks
 
-    conversation_count = Conversation.objects.filter(user=request.user, is_active=True).count()
-    message_count = (
-        Message.objects.filter(conversation__user=request.user, conversation__is_active=True).count()
-    )
+    conversation_count = Conversation.objects.filter(
+        user=request.user, is_active=True
+    ).count()
+    message_count = Message.objects.filter(
+        conversation__user=request.user, conversation__is_active=True
+    ).count()
     token_total = (
-        Message.objects.filter(conversation__user=request.user, conversation__is_active=True)
+        Message.objects.filter(
+            conversation__user=request.user, conversation__is_active=True
+        )
         .aggregate(total=Sum("tokens_used"))
         .get("total")
         or 0
@@ -211,7 +215,9 @@ def login_view(request):
     else:
         form = LoginForm(request)
 
-    return render(request, "auth/login.html", {"form": form, "next": request.GET.get("next", "")})
+    return render(
+        request, "auth/login.html", {"form": form, "next": request.GET.get("next", "")}
+    )
 
 
 @require_http_methods(["POST"])
@@ -299,7 +305,9 @@ def sessions_home(request):
     """List all active focus sessions for the signed-in user."""
     sessions = Conversation.objects.filter(user=request.user, is_active=True)
     llm_info = LLMService().get_provider_info()
-    return render(request, "sessions/list.html", {"sessions": sessions, "llm_info": llm_info})
+    return render(
+        request, "sessions/list.html", {"sessions": sessions, "llm_info": llm_info}
+    )
 
 
 @login_required(login_url="login")
@@ -321,19 +329,24 @@ def create_session(request):
 @login_required(login_url="login")
 def session_workspace(request, session_id):
     """Active focus session with AI."""
-    session = get_object_or_404(Conversation, id=session_id, user=request.user, is_active=True)
+    session = get_object_or_404(
+        Conversation, id=session_id, user=request.user, is_active=True
+    )
 
     if request.method == "POST":
         form = MessageForm(request.POST)
         if form.is_valid():
             user_message = form.cleaned_data["content"]
-            Message.objects.create(conversation=session, role="user", content=user_message)
+            Message.objects.create(
+                conversation=session, role="user", content=user_message
+            )
             history = [
-                {"role": m.role, "content": m.content}
-                for m in session.messages.all()
+                {"role": m.role, "content": m.content} for m in session.messages.all()
             ]
             llm = LLMService()
-            result = llm.generate_response(messages=history, temperature=0.7, max_tokens=600)
+            result = llm.generate_response(
+                messages=history, temperature=0.7, max_tokens=600
+            )
             if not result.get("error", False):
                 Message.objects.create(
                     conversation=session,
@@ -342,19 +355,25 @@ def session_workspace(request, session_id):
                     tokens_used=result.get("tokens_used", 0),
                 )
             else:
-                messages.error(request, f"AI error: {result.get('response', 'Unknown')}")
+                messages.error(
+                    request, f"AI error: {result.get('response', 'Unknown')}"
+                )
             return redirect("session_workspace", session_id=session_id)
     else:
         form = MessageForm()
 
     all_sessions = Conversation.objects.filter(user=request.user, is_active=True)
     llm_info = LLMService().get_provider_info()
-    return render(request, "sessions/workspace.html", {
-        "session": session,
-        "all_sessions": all_sessions,
-        "form": form,
-        "llm_info": llm_info,
-    })
+    return render(
+        request,
+        "sessions/workspace.html",
+        {
+            "session": session,
+            "all_sessions": all_sessions,
+            "form": form,
+            "llm_info": llm_info,
+        },
+    )
 
 
 @login_required(login_url="login")
@@ -526,6 +545,7 @@ def delete_conversation(request, conversation_id):
 # Floating Widget Chat API
 # ============================================================================
 
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def widget_chat(request):
@@ -554,34 +574,93 @@ def widget_chat(request):
         temperature=0.7,
         max_tokens=300,
     )
-    return JsonResponse({"response": result.get("response", ""), "tokens": result.get("tokens_used", 0)})
+    return JsonResponse(
+        {"response": result.get("response", ""), "tokens": result.get("tokens_used", 0)}
+    )
 
 
 # ============================================================================
 # Smart Search Application
 # ============================================================================
 
+
 def _seed_records():
     """Create demo records if the table is empty"""
     if SearchRecord.objects.exists():
         return
     demo = [
-        {"title": "Django Framework", "category": "article",
-         "content": "Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. It includes an ORM, admin interface, authentication, and more.", "tags": "python,web,framework,backend"},
-        {"title": "Machine Learning Basics", "category": "article",
-         "content": "Machine learning is a subset of AI that enables systems to learn from data. Key algorithms include linear regression, decision trees, neural networks, and clustering.", "tags": "AI,ML,data,science"},
-        {"title": "Alice Johnson", "category": "person",
-         "content": "Senior software engineer with 8 years of experience in Python, Django, and cloud technologies. Works at TechCorp. Expert in API design and microservices.", "tags": "engineer,python,backend"},
-        {"title": "Bob Smith", "category": "person",
-         "content": "Product manager with a background in UX design. Manages the mobile team at StartupXYZ. Interested in agile methodologies and user research.", "tags": "PM,agile,mobile,design"},
-        {"title": "Smart Watch Pro", "category": "product",
-         "content": "A premium smartwatch with health tracking, 7-day battery, GPS, and AMOLED display. Waterproof up to 50m. Available in black and silver. Price: $299.", "tags": "wearable,gadget,health,tech"},
-        {"title": "Ergonomic Office Chair", "category": "product",
-         "content": "Fully adjustable ergonomic chair with lumbar support, breathable mesh back, and 360-degree swivel. Ideal for long work sessions. Price: $450.", "tags": "furniture,office,ergonomic"},
-        {"title": "REST API Design Best Practices", "category": "note",
-         "content": "Use nouns for resource URLs, HTTP verbs for actions, JSON for responses. Always version your API (v1/v2). Return proper status codes. Add pagination for list endpoints.", "tags": "api,rest,design,backend"},
-        {"title": "Python Tips & Tricks", "category": "note",
-         "content": "Use list comprehensions for clean loops. f-strings are faster than .format(). dataclasses simplify class creation. Use walrus operator := for assignment expressions.", "tags": "python,tips,dev"},
+        {
+            "title": "Django Framework",
+            "category": "article",
+            "content": (
+                "Django is a high-level Python web framework that encourages rapid development "
+                "and clean, pragmatic design. It includes an ORM, admin interface, authentication, and more."
+            ),
+            "tags": "python,web,framework,backend",
+        },
+        {
+            "title": "Machine Learning Basics",
+            "category": "article",
+            "content": (
+                "Machine learning is a subset of AI that enables systems to learn from data. "
+                "Key algorithms include linear regression, decision trees, neural networks, and clustering."
+            ),
+            "tags": "AI,ML,data,science",
+        },
+        {
+            "title": "Alice Johnson",
+            "category": "person",
+            "content": (
+                "Senior software engineer with 8 years of experience in Python, Django, and cloud technologies. "
+                "Works at TechCorp. Expert in API design and microservices."
+            ),
+            "tags": "engineer,python,backend",
+        },
+        {
+            "title": "Bob Smith",
+            "category": "person",
+            "content": (
+                "Product manager with a background in UX design. Manages the mobile team at StartupXYZ. "
+                "Interested in agile methodologies and user research."
+            ),
+            "tags": "PM,agile,mobile,design",
+        },
+        {
+            "title": "Smart Watch Pro",
+            "category": "product",
+            "content": (
+                "A premium smartwatch with health tracking, 7-day battery, GPS, and AMOLED display. "
+                "Waterproof up to 50m. Available in black and silver. Price: $299."
+            ),
+            "tags": "wearable,gadget,health,tech",
+        },
+        {
+            "title": "Ergonomic Office Chair",
+            "category": "product",
+            "content": (
+                "Fully adjustable ergonomic chair with lumbar support, breathable mesh back, "
+                "and 360-degree swivel. Ideal for long work sessions. Price: $450."
+            ),
+            "tags": "furniture,office,ergonomic",
+        },
+        {
+            "title": "REST API Design Best Practices",
+            "category": "note",
+            "content": (
+                "Use nouns for resource URLs, HTTP verbs for actions, JSON for responses. "
+                "Always version your API (v1/v2). Return proper status codes. Add pagination for list endpoints."
+            ),
+            "tags": "api,rest,design,backend",
+        },
+        {
+            "title": "Python Tips & Tricks",
+            "category": "note",
+            "content": (
+                "Use list comprehensions for clean loops. f-strings are faster than .format(). "
+                "dataclasses simplify class creation. Use walrus operator := for assignment expressions."
+            ),
+            "tags": "python,tips,dev",
+        },
     ]
     for d in demo:
         SearchRecord.objects.create(**d)
@@ -603,6 +682,7 @@ def search_home(request):
     if query:
         # Keyword filter across title, content, tags
         from django.db.models import Q
+
         results = results.filter(
             Q(title__icontains=query)
             | Q(content__icontains=query)
@@ -612,8 +692,7 @@ def search_home(request):
         # Ask the LLM to summarise based on the matching records
         if results.exists():
             records_text = "\n\n".join(
-                f"[{r.category.upper()}] {r.title}:\n{r.content}"
-                for r in results[:5]
+                f"[{r.category.upper()}] {r.title}:\n{r.content}" for r in results[:5]
             )
             llm = LLMService()
             llm_result = llm.generate_response(
@@ -691,4 +770,3 @@ def delete_search_record(request, record_id):
         record.delete()
         messages.success(request, "Record deleted.")
     return redirect("search_home")
-

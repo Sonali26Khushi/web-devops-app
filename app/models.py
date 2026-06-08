@@ -12,7 +12,10 @@ class AppEvent(models.Model):
 
 class Conversation(models.Model):
     """Store conversation history for users"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="conversations")
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="conversations"
+    )
     title = models.CharField(max_length=255, default="New Conversation")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -27,13 +30,16 @@ class Conversation(models.Model):
 
 class Message(models.Model):
     """Store individual messages in conversations"""
+
     ROLE_CHOICES = [
         ("user", "User"),
         ("assistant", "Assistant"),
         ("system", "System"),
     ]
 
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    conversation = models.ForeignKey(
+        Conversation, on_delete=models.CASCADE, related_name="messages"
+    )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -48,6 +54,7 @@ class Message(models.Model):
 
 class SearchRecord(models.Model):
     """Searchable records that the LLM can query and summarise"""
+
     CATEGORY_CHOICES = [
         ("person", "Person"),
         ("product", "Product"),
@@ -57,11 +64,19 @@ class SearchRecord(models.Model):
     ]
 
     title = models.CharField(max_length=255)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="other")
+    category = models.CharField(
+        max_length=20, choices=CATEGORY_CHOICES, default="other"
+    )
     content = models.TextField()
-    tags = models.CharField(max_length=500, blank=True, help_text="Comma-separated tags")
+    tags = models.CharField(
+        max_length=500, blank=True, help_text="Comma-separated tags"
+    )
     created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="search_records"
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="search_records",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

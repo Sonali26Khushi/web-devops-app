@@ -4,8 +4,7 @@ Supports both OpenAI and Ollama backends
 """
 
 import os
-import json
-from typing import Optional, List, Dict, Any
+from typing import List, Dict, Any
 import requests
 from django.conf import settings
 
@@ -170,11 +169,14 @@ class LLMService:
         available = self.model_is_available() if self.provider == "ollama" else True
         return {
             "provider": self.provider,
-            "model": "gpt-3.5-turbo" if self.provider == "openai" else self.ollama_model,
+            "model": (
+                "gpt-3.5-turbo" if self.provider == "openai" else self.ollama_model
+            ),
             "ollama_url": self.ollama_url if self.provider == "ollama" else None,
             "available": available,
             "pull_cmd": (
                 f"docker exec webapp-ollama ollama pull {self.ollama_model}"
-                if not available else None
+                if not available
+                else None
             ),
         }

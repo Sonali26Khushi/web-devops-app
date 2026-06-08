@@ -13,6 +13,8 @@ urlpatterns = [
     # Focus Sessions
     path("sessions/", views.sessions_home, name="sessions_home"),
     path("sessions/new/", views.create_session, name="create_session"),
-    path("sessions/<int:session_id>/", views.session_workspace, name="session_workspace"),
+    path(
+        "sessions/<int:session_id>/", views.session_workspace, name="session_workspace"
+    ),
     path("sessions/<int:session_id>/end/", views.end_session, name="end_session"),
 ]
