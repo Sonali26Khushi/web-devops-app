@@ -15,6 +15,10 @@ jobs:
           username: ${{vars.DOCKERHUB_USER}}
           password: ${{secrets.DOCKERHUB_TOKEN}}
 
+      - name: Sanitize ref name for Docker tag
+        id: tag
+        run: echo "ref=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+
       - name: build and push docker image
         uses: docker/build-push-action@v6
         with:
@@ -23,4 +27,4 @@ jobs:
           tags: |
             ${{vars.DOCKERHUB_USER}}/web-devops-app:latest
             ${{vars.DOCKERHUB_USER}}/web-devops-app:${{github.sha}}
-            ${{vars.DOCKERHUB_USER}}/web-devops-app:${{ replace(github.ref_name, '/', '-') }}
+            ${{vars.DOCKERHUB_USER}}/web-devops-app:${{ steps.tag.outputs.ref }}
