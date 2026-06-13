@@ -23,4 +23,4 @@ jobs:
           tags: |
             ${{vars.DOCKERHUB_USER}}/web-devops-app:latest
             ${{vars.DOCKERHUB_USER}}/web-devops-app:${{github.sha}}
-            ${{vars.DOCKERHUB_USER}}/web-devops-app:${{github.ref_name}}
+            ${{vars.DOCKERHUB_USER}}/web-devops-app:${{ replace(github.ref_name, '/', '-') }}
