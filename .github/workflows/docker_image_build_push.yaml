@@ -1,11 +1,6 @@
 name: Build and Push
-
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - update-docker-file
 
 jobs:
   build_push:
